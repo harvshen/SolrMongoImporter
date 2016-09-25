@@ -32,15 +32,7 @@ then use the same naming convention in Solr's schema file, so the above structur
   price_currencySymbol=$
 For details, refer to MongoDataSource.java
 ```
-```xml
-    <!-- Sample Solr schema.xml -->
-	<field name="postId" type="string" indexed="true" required="true" />
-	<field name="categoryPath" type="string" indexed="true" stored="true"/>
-    <field name="title" type="textnosynonym" indexed="true" stored="true" />
-    <field name="price"  type="double" indexed="true" stored="true" />
-    <field name="price_currency"  type="string" indexed="true" stored="true" />
-    <field name="price_currencySymbol"  type="string" indexed="false" stored="true" />
-```
+
 ## Classes
 
 * MongoDataSource - Provides a MongoDb datasource
@@ -54,7 +46,7 @@ For details, refer to MongoDataSource.java
 * MongoMapperTransformer - Map MongoDb fields to your Solr schema
     * mongoField (**required**)
 
-## Installation
+## Preparation
 1. Firstly you will need a copy of the Solr Mongo Importer jar.
     ### Getting Solr Mongo Importer
     1. [Download the latest JAR from github](https://github.com/harvshen/SolrMongoImporter/tree/master/releases)
@@ -66,12 +58,71 @@ For details, refer to MongoDataSource.java
 4. Add lib directives to your solrconfig.xml
 
 ```xml
-    <lib path="../../dist/solr-mongo-importer-{version}.jar" />
-    <lib path="../../dist/mongo-java-driver-2.x.jar" />
+    <lib path="../../dist/mongo-java-driver-2.14.1.jar" />
+    <lib path="../../dist/solr-mongo-importer-1.1.0.jar" />
 ```
 
-##Usage
-Here is a sample dih-config.xml showing the use of all components
+##Step-by-step instruction
+#### Step 1. Understand the DataImportHandler
+https://wiki.apache.org/solr/DataImportHandler
+This wiki explains it pretty well when working with relational database.
+
+#### Step 2. Make sure your MongoDB is working
+Assume my Mongodb database name "posts", the collection name "sellposts"
+db.sellposts.find()
+```json
+/* 1 */
+{
+    "_id" : "2bd571b04f374d71929560d04b58ba51",
+    "categoryPath" : "/SALE/Appliances",
+    "title" : "string",
+    "price" : {
+        "value" : 123456789.88,
+        "currency" : "CAD",
+        "currencySymbol" : "$"
+    }
+}
+
+/* 2 */
+{
+    "_id" : "5d55c86945004dd79a4333bf2bcc6d83",
+    "categoryPath" : "/SALE/Appliances",
+    "title" : "Whrilpool cabrio set",
+    "price" : {
+        "value" : 629.0,
+        "currency" : "USD",
+        "currencySymbol" : "$"
+    }
+}
+```
+
+#### Step 3. Declare Solr fields in schema.xml
+```xml
+    <!-- Sample Solr schema.xml -->
+  <fields>    
+	<field name="postId" type="string" indexed="true" required="true" />
+	<field name="categoryPath" type="string" indexed="true" stored="true"/>
+    <field name="title" type="textnosynonym" indexed="true" stored="true" />
+    <field name="price"  type="double" indexed="true" stored="true" />
+    <field name="price_currency"  type="string" indexed="true" stored="true" />
+    <field name="price_currencySymbol"  type="string" indexed="false" stored="true" />
+  </fields>
+```
+
+#### Step 4. Declare dih-config.xml in solrconfig.xml
+```xml
+  <config>
+    ...
+	<requestHandler name="/dataimport" class="org.apache.solr.handler.dataimport.DataImportHandler">
+	  <lst name="defaults">
+		<str name="config">dih-config.xml</str>
+	  </lst>
+	</requestHandler>
+	...
+  </config>
+```
+
+#### Step 5. Define the dih-config.xml under your Solr collection/conf folder (where schema.xml, solrconfig.xml is stored) 
 ```xml
 <?xml version="1.0" encoding="utf-8" ?>
 <dataConfig>
@@ -95,8 +146,6 @@ Here is a sample dih-config.xml showing the use of all components
                  <field column="EmpNumber" name="EmployeeNumber" mongoField="EmpNumber"/>
                  -->
             <field column="_id" name="postId"/>
-            <field column="coordination_lattitude" name="GeoLocation_0_coordinate"/>
-            <field column="coordination_longitude" name="GeoLocation_1_coordinate"/>
             <field column="price_value" name="price"/>
         </entity>
     </document>
@@ -104,16 +153,62 @@ Here is a sample dih-config.xml showing the use of all components
 
 ```
 
-5. If you need auto scheduling job configured for the delta import job, you can [find more details here] (https://wiki.apache.org/solr/DataImportHandler)
+#### Step 6. Run the full import
+Assuming solr is running on port 8080 and mongodb are running on 27017, 
+open the following link http://localhost:8983/solr/sellpost/dataimport?command=full-import 
+This should trigger the full index to import the data from mongodb to solr.
+
+Try the search query: http://localhost:8983/solr/sellpost/query?q=*
+
+#### Step 7. Enable the delta import scheduler job
+If you need auto scheduling job configured for the delta import job, you can [find more details here] (https://wiki.apache.org/solr/DataImportHandler)
 For your convenience, I also include the source code
 
 * SolrDataImportProperties.java
 * ApplicationListener.java
 * HTTPPostScheduler.java
 
+##### Step 7.1 compile the above source and put it in the classpath
+##### Step 7.2 declear it in web.xml
 ```xml
  <!-- web.xml -->
- <listener>
-   <listener-class>org.apache.solr.handler.dataimport.scheduler.ApplicationListener</listener-class>
- </listener>
+   <listener>
+     <listener-class>org.apache.solr.handler.dataimport.scheduler.ApplicationListener</listener-class>
+   </listener>
+```
+##### Step 7.3 define dataimport.properties
+${solrHome}/solr/conf/dataimport.properties
+```
+#################################################
+# delta dataimport scheduler properties         #
+#################################################
+#  to sync or not to sync
+#  1 - active; anything else - inactive
+syncEnabled=1
+
+#  which cores to schedule
+#  in a multi-core environment you can decide which cores you want syncronized
+#  leave empty or comment it out if using single-core deployment
+syncCores=sellpost
+
+#  solr server name or IP address
+#  [defaults to localhost if empty]
+server=127.0.0.1
+
+#  solr server port
+#  [defaults to 80 if empty]
+port=8983
+
+#  application name/context
+#  [defaults to current ServletContextListener's context (app) name]
+webapp=solr
+
+#  URL params [mandatory]
+#  delta import command remainder of URL
+params=/dataimport?command=delta-import&clean=false&commit=true
+
+#  define how frequent the delta import should run
+#  (number of minutes between two runs)
+#  [defaults to 10 if empty]
+interval=5
 ```
