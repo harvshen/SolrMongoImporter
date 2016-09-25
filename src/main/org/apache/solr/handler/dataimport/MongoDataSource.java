@@ -118,16 +118,25 @@ public class MongoDataSource extends DataSource<Iterator<Map<String, Object>>>{
             Set<String>         keys     = mongoObject.keySet();
             Iterator<String>    iterator = keys.iterator();
 
-
             while ( iterator.hasNext() ) {
                 String key = iterator.next();
                 Object innerObject = mongoObject.get(key);
 
-                if(innerObject instanceof BasicDBObject){
-                    //when innerObject is a nested object, let's flatten it.
-                    //key = price
-                    //innerObj is the Price object which contains subKey of (value, currency, currencySymbol)
-                    //flatten it to price_value = 35; price_currency = USD
+                if(innerObject instanceof BasicDBObject) {
+                    //when innerObject is a nested object, for example
+                    //{
+                    //  "postId": "string",
+                    //  "categoryPath": "string",
+                    //  "title": "string",
+                    //  "price": {
+                    //    "value": 0,
+                    //    "currency": "USD",
+                    //    "currencySymbol": "$"
+                    //  }
+                    //}
+                    // the innerObj "price" is actually a nested object, which is not supported by Solr directly, we need to flatten it to key/value pair.
+                    //a simple way to add an underscore, then use the same naming convention in Solr's schema file, so the above structure will become
+                    //price_value=0, price_currency=USD, price_currencySymbol=$
                     BasicDBObject innerObj = (BasicDBObject)innerObject;
                     for(String subKey : innerObj.keySet()){
                         result.put(key+"_"+subKey, innerObj.get(subKey));

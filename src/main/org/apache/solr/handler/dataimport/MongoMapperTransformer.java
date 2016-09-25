@@ -16,7 +16,7 @@ public class MongoMapperTransformer extends Transformer{
 
         for (Map<String, String> map : context.getAllEntityFields()) {
             String mongoFieldName = map.get( MONGO_FIELD );
-            if( mongoFieldName == null )
+            if (mongoFieldName == null )
                 continue;
 
             String columnFieldName = map.get( DataImporter.COLUMN );

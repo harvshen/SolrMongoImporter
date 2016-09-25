@@ -9,6 +9,11 @@ import org.apache.solr.core.SolrResourceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Credit to
+ * https://wiki.apache.org/solr/DataImportHandler
+ *
+ */
 public class SolrDataImportProperties {
         private Properties properties;
 

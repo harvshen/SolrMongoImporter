@@ -11,14 +11,13 @@ import java.util.regex.Pattern;
 import static org.apache.solr.handler.dataimport.DataImportHandlerException.SEVERE;
 
 /**
- * Note:
- * original credit: https://github.com/james75
- * modified by marciogoda: https://github.com/marciogoda/SolrMongoImporter
+ * Credit to James75 and marciogoda<br>
+ * <li>https://github.com/james75</li>
+ * <li>marciogoda: https://github.com/marciogoda/SolrMongoImporter</li>
+ * <br>
+ * My contribution: fix the date/time format issue, thus make delta import and delta deletion work with last_index_time variable
  *
- * I modified a bit to further fix the date string issue, make delta import and delta deletion really working with last_index_time!
  */
-
-
 public class MongoEntityProcessor extends EntityProcessorBase {
     private static final Logger LOG = LoggerFactory.getLogger(EntityProcessorBase.class);
     //pattern example: 2016-03-20 22:14:56
@@ -114,7 +113,7 @@ public class MongoEntityProcessor extends EntityProcessorBase {
         }
     }
 
-
+/* simple test method
     public static void main(String[] args) throws IOException {
         //String rawMessage = "{$and : [ {$or : [{'status' : 'DELETED'},{'status' : 'UNLISTED'} ]}, {'modifiedAt':{$gt:{$date:'2016-03-20 22:14:56'}} } ] }";
         String rawMessage = "{$and : [ {$or : [{'status' : 'AVAILABLE'},{'status' : 'SOLD'} ]}, {'modifiedAt':{$gt:{$date:'2016-03-20 22:14:56'}} } ] }";
@@ -126,7 +125,7 @@ public class MongoEntityProcessor extends EntityProcessorBase {
 
         System.out.println(result1.equals(result2));
     }
-
+*/
 
     /**
      * <p>

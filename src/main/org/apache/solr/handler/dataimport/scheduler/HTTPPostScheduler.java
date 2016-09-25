@@ -18,7 +18,11 @@ import org.slf4j.LoggerFactory;
 
 import solr.search.util.AppProperties;
 
-
+/**
+ * Credit to
+ * https://wiki.apache.org/solr/DataImportHandler
+ *
+ */
 public class HTTPPostScheduler extends TimerTask {
         private String syncEnabled;
         private String[] syncCores;

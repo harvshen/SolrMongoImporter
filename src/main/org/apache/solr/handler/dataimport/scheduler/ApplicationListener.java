@@ -11,6 +11,15 @@ import javax.servlet.ServletContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Credit to
+ * https://wiki.apache.org/solr/DataImportHandler
+ * <br>
+ * Don't forget to add the following listener declaration to Solr's web.xml <br>
+ * <listener>
+ *   <listener-class>org.apache.solr.handler.dataimport.scheduler.ApplicationListener</listener-class>
+ * </listener>
+ */
 public class ApplicationListener implements ServletContextListener {
 
         private static final Logger logger = LoggerFactory.getLogger(ApplicationListener.class);
