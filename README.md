@@ -24,15 +24,16 @@ This is based on James' project (https://github.com/james75) with some improveme
     "currencySymbol": "$"
   }
 }
-The innerObj "price" is actually a nested object, which is not supported by Solr directly. We need to flatten it to key/value pair.
-A simple way to add an underscore, then use the same naming convention in Solr's schema file, so the above structure will become
+The innerObj "price" is actually a nested object, which is not supported by Solr directly. 
+We need to flatten it to key/value pairs. A simple way is to add an underscore for sub-key, 
+then use the same naming convention in Solr's schema file, so the above structure will become
   price_value=0
   price_currency=USD
   price_currencySymbol=$
 For details, refer to MongoDataSource.java
 ```
 ```xml
-    <!-- Solr schema.xml -->
+    <!-- Sample Solr schema.xml -->
 	<field name="postId" type="string" indexed="true" required="true" />
 	<field name="categoryPath" type="string" indexed="true" stored="true"/>
     <field name="title" type="textnosynonym" indexed="true" stored="true" />
@@ -58,7 +59,7 @@ For details, refer to MongoDataSource.java
     ### Getting Solr Mongo Importer
     1. [Download the latest JAR from github](https://github.com/harvshen/SolrMongoImporter/tree/master/releases)
     2. Build your own using the ant build script you will need the JDK installed as well as Ant and Ivy, just run "ant build"
-2. You will also need the [Mongo Java driver 2.x JAR]   (https://github.com/harvshen/mongo-java-driver/downloads)
+2. You will also need the [Mongo Java driver 2.x JAR] (https://github.com/mongodb/mongo-java-driver/downloads), note it's not 3.x
    Or find the [local copy here] (https://github.com/harvshen/SolrMongoImporter/tree/master/releases)
 
 3. Place both of these jar's in your Solr libaries folder ( I put mine in 'dist' folder with the other jar's)
@@ -105,10 +106,13 @@ Here is a sample dih-config.xml showing the use of all components
 
 5. If you need auto scheduling job configured for the delta import job, you can [find more details here] (https://wiki.apache.org/solr/DataImportHandler)
 For your convenience, I also include the source code
+
 * SolrDataImportProperties.java
 * ApplicationListener.java
 * HTTPPostScheduler.java
+
 ```xml
+ <!-- web.xml -->
  <listener>
    <listener-class>org.apache.solr.handler.dataimport.scheduler.ApplicationListener</listener-class>
  </listener>
